@@ -1,0 +1,1353 @@
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Preloader from "@/components/Preloader";
+import LenisProvider from "@/components/LenisProvider";
+import ChatWidget from "@/components/ChatWidget";
+
+gsap.registerPlugin(ScrollTrigger);
+
+export default function Home() {
+  const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [contactSuccess, setContactSuccess] = useState(false);
+  const [contactLoading, setContactLoading] = useState(false);
+
+  // Form states
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+
+  // Refs for animations
+  const heroRef = useRef<HTMLDivElement>(null);
+  const heroImgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    if (loading) return;
+
+    // Reset scroll triggers
+    ScrollTrigger.getAll().forEach(t => t.kill());
+
+    // 1. GSAP Parallax Animation on Hero Image
+    if (heroRef.current && heroImgRef.current) {
+      gsap.to(heroImgRef.current, {
+        yPercent: 15,
+        ease: "none",
+        scrollTrigger: {
+          trigger: heroRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
+    }
+
+    // 2. Navbar glassmorphic background scroll toggle
+    const nav = document.getElementById("main-nav");
+    if (nav) {
+      ScrollTrigger.create({
+        start: "top -50px",
+        onEnter: () => {
+          nav.classList.add("glass-navbar", "py-3");
+          nav.classList.remove("bg-transparent", "py-5");
+        },
+        onLeaveBack: () => {
+          nav.classList.remove("glass-navbar", "py-3");
+          nav.classList.add("bg-transparent", "py-5");
+        },
+      });
+    }
+
+    // 3. GSAP Fade Up reveals for sections
+    const animateOnScroll = document.querySelectorAll(".reveal-scroll");
+    animateOnScroll.forEach((el) => {
+      gsap.fromTo(
+        el,
+        { opacity: 0, y: 50 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 1,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: el,
+            start: "top 80%",
+            toggleActions: "play none none none",
+          },
+        }
+      );
+    });
+
+    // 4. GSAP Staggered reveals for cards
+    const cardContainers = document.querySelectorAll(".reveal-cards-container");
+    cardContainers.forEach((container) => {
+      const cards = container.querySelectorAll(".reveal-card");
+      if (cards.length > 0) {
+        gsap.fromTo(
+          cards,
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            stagger: 0.2,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: container,
+              start: "top 75%",
+            },
+          }
+        );
+      }
+    });
+
+  }, [loading]);
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !email || !message) return;
+
+    setContactLoading(true);
+    try {
+      const res = await fetch("http://localhost:5001/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, message }),
+      });
+
+      if (res.ok) {
+        setContactSuccess(true);
+        setName("");
+        setEmail("");
+        setMessage("");
+      } else {
+        alert("Failed to submit message. Please try again.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Backend connection error. Please make sure backend server is running.");
+    } finally {
+      setContactLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <AnimatePresence mode="wait">
+        {loading && <Preloader onComplete={() => setLoading(false)} />}
+      </AnimatePresence>
+
+      {!loading && (
+        <LenisProvider>
+          {/* TopNavBar */}
+          <nav
+            id="main-nav"
+            className="fixed top-0 w-full z-50 bg-transparent py-5 transition-all duration-300"
+          >
+            <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop w-full max-w-container-max mx-auto">
+              <a
+                href="#"
+                className="font-display-lg text-headline-lg-mobile md:text-headline-lg text-primary-fixed italic tracking-tighter uppercase font-black"
+                id="site-logo"
+              >
+                IRON CORE
+              </a>
+
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center gap-8">
+                <a
+                  href="#the-method"
+                  className="font-label-bold text-xs uppercase tracking-widest text-on-surface hover:text-primary-fixed transition-colors"
+                >
+                  The Method
+                </a>
+                <a
+                  href="#the-lab"
+                  className="font-label-bold text-xs uppercase tracking-widest text-on-surface hover:text-primary-fixed transition-colors"
+                >
+                  The Lab
+                </a>
+                <a
+                  href="#coaching"
+                  className="font-label-bold text-xs uppercase tracking-widest text-on-surface hover:text-primary-fixed transition-colors"
+                >
+                  Coaching
+                </a>
+                <a
+                  href="#the-program"
+                  className="font-label-bold text-xs uppercase tracking-widest text-on-surface hover:text-primary-fixed transition-colors"
+                >
+                  The Program
+                </a>
+                <a
+                  href="#pricing"
+                  className="font-label-bold text-xs uppercase tracking-widest text-on-surface hover:text-primary-fixed transition-colors"
+                >
+                  Pricing
+                </a>
+                <a
+                  href="#faq"
+                  className="font-label-bold text-xs uppercase tracking-widest text-on-surface hover:text-primary-fixed transition-colors"
+                >
+                  FAQ
+                </a>
+                <a
+                  href="#contact"
+                  className="font-label-bold text-xs uppercase tracking-widest text-on-surface hover:text-primary-fixed transition-colors"
+                >
+                  Contact
+                </a>
+              </div>
+
+              {/* Primary Action */}
+              <a
+                href="#pricing"
+                className="font-label-bold text-xs uppercase tracking-widest bg-primary-fixed text-black font-bold px-6 py-3 hover:bg-white transition-all duration-300 active:scale-95 hidden md:block"
+                id="btn-nav-join"
+              >
+                JOIN NOW
+              </a>
+
+              {/* Mobile Menu Toggle */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden text-primary-fixed"
+                id="btn-mobile-toggle"
+              >
+                <span className="material-symbols-outlined text-3xl">
+                  {mobileMenuOpen ? "close" : "menu"}
+                </span>
+              </button>
+            </div>
+
+            {/* Mobile Drawer */}
+            <AnimatePresence>
+              {mobileMenuOpen && (
+                <motion.div
+                  className="fixed inset-0 top-[70px] z-40 bg-background/95 backdrop-blur-lg flex flex-col p-8 gap-6 md:hidden border-t border-[#262626]"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <a
+                    href="#the-method"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="font-display-lg text-2xl text-white uppercase italic"
+                  >
+                    The Method
+                  </a>
+                  <a
+                    href="#the-lab"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="font-display-lg text-2xl text-white uppercase italic"
+                  >
+                    The Lab
+                  </a>
+                  <a
+                    href="#coaching"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="font-display-lg text-2xl text-white uppercase italic"
+                  >
+                    Coaching
+                  </a>
+                  <a
+                    href="#the-program"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="font-display-lg text-2xl text-white uppercase italic"
+                  >
+                    The Program
+                  </a>
+                  <a
+                    href="#pricing"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="font-display-lg text-2xl text-white uppercase italic"
+                  >
+                    Pricing
+                  </a>
+                  <a
+                    href="#faq"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="font-display-lg text-2xl text-white uppercase italic"
+                  >
+                    FAQ
+                  </a>
+                  <a
+                    href="#contact"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="font-display-lg text-2xl text-white uppercase italic"
+                  >
+                    Contact
+                  </a>
+                  <a
+                    href="#pricing"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full text-center bg-primary-fixed text-black font-label-bold py-4 uppercase tracking-widest font-bold mt-6"
+                  >
+                    JOIN NOW
+                  </a>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </nav>
+
+          {/* Hero Section */}
+          <header
+            ref={heroRef}
+            className="relative w-full min-h-screen flex items-center justify-center pt-24 overflow-hidden"
+          >
+            <div className="absolute inset-0 z-0">
+              <img
+                ref={heroImgRef}
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDImLjriaWvYn97XmKMHXiVejDL3g4FG1vvofbthq1cVPxiImQU-66k2WJCAm9N496vR1e2s2MUkmy7lxxdLvLTSnBgJ2nX1Vb-vuFWsUk5oM0ThocfHQP-VOnpLRC4sJfbAW552LmiGALN_M3KRMnBDssP-99eQejxkawkMBF_kHuHc-dbMMAl6kvq72_PrbR3RYsdCURaIxV_L5t4YU7IbU9E92bNJXbmnKBq_9ul9BeSM6tNgm3mkKiUtJdkkt1TNoa7-9XWqZ8"
+                className="w-full h-full object-cover scale-125 origin-center will-change-transform opacity-70"
+                alt="Elite athlete training in a dark industrial gym"
+                id="hero-bg"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/60 to-background pointer-events-none" />
+            </div>
+
+            <div className="relative z-10 w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center md:text-left flex flex-col md:items-start items-center gap-6">
+              {/* Badge */}
+              <motion.div
+                className="inline-block px-4 py-1.5 bg-surface-container-high border border-surface-container-highest"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <span className="font-label-bold text-[10px] md:text-xs uppercase text-primary-fixed tracking-widest font-bold">
+                  No Excuses. Just Results.
+                </span>
+              </motion.div>
+
+              {/* Title */}
+              <motion.h1
+                className="font-display-xl text-4xl sm:text-6xl md:text-8xl text-white italic uppercase max-w-4xl drop-shadow-2xl leading-none font-black"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                FORGE YOUR <br />
+                <span className="text-primary-fixed">FUTURE</span>
+              </motion.h1>
+
+              {/* Text */}
+              <motion.p
+                className="font-body-lg text-base md:text-xl text-on-surface-variant max-w-2xl mt-4 leading-relaxed"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+              >
+                Enter the premier high-performance training facility designed for athletes who demand
+                more. Elite equipment, world-class coaching, and an uncompromising atmosphere.
+              </motion.p>
+
+              {/* Actions */}
+              <motion.div
+                className="mt-8 flex flex-col sm:flex-row gap-4 w-full sm:w-auto"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+              >
+                <a
+                  href="#pricing"
+                  className="font-label-bold text-sm uppercase tracking-widest bg-primary-fixed text-black font-bold px-8 py-4 hover:bg-white transition-all duration-300 active:scale-95 w-full sm:w-auto text-center"
+                >
+                  JOIN NOW
+                </a>
+                <a
+                  href="#the-lab"
+                  className="font-label-bold text-sm uppercase tracking-widest border-2 border-white text-white font-bold px-8 py-4 hover:bg-white hover:text-black transition-all duration-300 active:scale-95 w-full sm:w-auto text-center"
+                >
+                  VIEW FACILITY
+                </a>
+              </motion.div>
+            </div>
+          </header>
+
+          {/* Features / Training Section */}
+          <section
+            id="the-method"
+            className="w-full py-section-gap px-margin-mobile md:px-margin-desktop bg-background reveal-scroll"
+          >
+            <div className="max-w-container-max mx-auto">
+              <div className="mb-16 md:mb-24 text-center md:text-left border-l-4 border-primary-fixed pl-6">
+                <h2 className="font-display-lg text-3xl md:text-5xl italic uppercase text-white font-black">
+                  THE <span className="text-primary-fixed">METHOD</span>
+                </h2>
+                <p className="font-body-lg text-base md:text-lg text-on-surface-variant mt-4 max-w-2xl">
+                  A systematic approach to strength, conditioning, and elite physical development.
+                </p>
+              </div>
+
+              {/* Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter reveal-cards-container">
+                {/* Card 1 */}
+                <div className="bg-[#1A1A1A] p-8 border border-[#262626] hover:border-primary-fixed transition-all duration-500 group cursor-pointer reveal-card flex flex-col items-start gap-4">
+                  <span className="material-symbols-outlined text-primary-fixed text-5xl group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300">
+                    fitness_center
+                  </span>
+                  <h3 className="font-headline-lg text-xl md:text-2xl uppercase text-white font-bold">
+                    Strength
+                  </h3>
+                  <p className="font-body-md text-sm md:text-base text-on-surface-variant leading-relaxed">
+                    Powerlifting, Olympic lifting, and functional hypertrophy programming to build raw
+                    power.
+                  </p>
+                </div>
+
+                {/* Card 2 */}
+                <div className="bg-[#1A1A1A] p-8 border border-[#262626] hover:border-primary-fixed transition-all duration-500 group cursor-pointer reveal-card flex flex-col items-start gap-4">
+                  <span className="material-symbols-outlined text-primary-fixed text-5xl group-hover:scale-110 group-hover:scale-y-110 transition-transform duration-300">
+                    monitor_heart
+                  </span>
+                  <h3 className="font-headline-lg text-xl md:text-2xl uppercase text-white font-bold">
+                    Conditioning
+                  </h3>
+                  <p className="font-body-md text-sm md:text-base text-on-surface-variant leading-relaxed">
+                    High-intensity metabolic conditioning designed to push your anaerobic threshold and
+                    build endurance.
+                  </p>
+                </div>
+
+                {/* Card 3 */}
+                <div className="bg-[#1A1A1A] p-8 border border-[#262626] hover:border-primary-fixed transition-all duration-500 group cursor-pointer reveal-card flex flex-col items-start gap-4">
+                  <span className="material-symbols-outlined text-primary-fixed text-5xl group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
+                    sports_gymnastics
+                  </span>
+                  <h3 className="font-headline-lg text-xl md:text-2xl uppercase text-white font-bold">
+                    Recovery
+                  </h3>
+                  <p className="font-body-md text-sm md:text-base text-on-surface-variant leading-relaxed">
+                    Dedicated mobility zones, cold plunges, and targeted active recovery protocols to
+                    keep you in the fight.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Facility Gallery (Bento Grid) */}
+          <section
+            id="the-lab"
+            className="w-full py-section-gap px-margin-mobile md:px-margin-desktop bg-[#0A0A0A] reveal-scroll"
+          >
+            <div className="max-w-container-max mx-auto">
+              <div className="mb-16 flex flex-col md:flex-row justify-between items-end gap-6 border-b border-[#262626] pb-8">
+                <div>
+                  <h2 className="font-display-lg text-3xl md:text-5xl italic uppercase text-white font-black">
+                    THE <span className="text-primary-fixed">LAB</span>
+                  </h2>
+                  <p className="font-body-lg text-sm md:text-base text-on-surface-variant mt-2">
+                    15,000 sq ft of pure performance architecture.
+                  </p>
+                </div>
+                <a
+                  href="#contact"
+                  className="font-label-bold text-xs uppercase tracking-widest text-primary-fixed hover:text-white transition-colors flex items-center gap-2 group"
+                >
+                  FULL TOUR{" "}
+                  <span className="material-symbols-outlined group-hover:translate-x-2 transition-transform">
+                    arrow_forward
+                  </span>
+                </a>
+              </div>
+
+              {/* Bento Grid Layout */}
+              <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-4 h-auto md:h-[600px]">
+                {/* Main large image */}
+                <div className="md:col-span-2 md:row-span-2 relative group overflow-hidden bg-[#1A1A1A] min-h-[300px]">
+                  <img
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCm-4KixCNbYaYojNbQnOMKS2tH2Y-PtWYBKaXO4UnfPflOigVhy67pn2ipwVsbNAXNdt-UnSO-cCtHrKfXG22Ln4n6DiiUSJj1mvpqRKHunfOnYZgZJXL6zNqhbnsbiBmmp-HE8K2lR1YVm81zogjerSL2O3RPmi4aPsSZIl0WGOMTbw1KoxeCyxkZHubzDaXtTM8v14JDwHVziNOLiO9AY8UkzCUMk5c3kC8Ag27cIQ8PSmI9qGIzA0XREV5y_t6HEQK8bu0q-pM"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-80"
+                    alt="Iron Core main floor performance racks"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] to-transparent opacity-80" />
+                  <div className="absolute bottom-6 left-6 right-6">
+                    <span className="bg-primary-fixed text-black font-label-bold text-[10px] px-2 py-1 uppercase tracking-widest mb-2 inline-block font-bold">
+                      Main Floor
+                    </span>
+                    <h3 className="font-headline-lg text-xl md:text-3xl uppercase text-white font-bold">
+                      Performance Racks
+                    </h3>
+                  </div>
+                </div>
+
+                {/* Top Right */}
+                <div className="md:col-span-2 md:row-span-1 relative group overflow-hidden bg-[#1A1A1A] min-h-[200px]">
+                  <img
+                    alt="Modern dark industrial gym cardio training zone"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-60"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBeWP6aGruprpScX2h17NNxaZQfRCQmxgi_l3ybKb_UDdyVZNKk5EjyhfwsxXwSOEEEk6ywX96xTyNmTCny3WGnnZNyUUc8HEAXLWAJs0v1wqc1nQ4ZehYCqHl9BcUIOHuhjvruhJmBDoL0-nHQfGdp7uLpEFdtuSFnrLvYGsMGs-w1q1DLNjUc1ifAEKVxgrfMnJnF3_A554xTFJzEFFcuL9bvcktMkLyuAiK7WYiXu1cd7D56qqrP4oWeeQs4ZcrtFu7nUAoqIlg"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] to-transparent opacity-80" />
+                  <div className="absolute bottom-6 left-6">
+                    <span className="bg-[#262626] text-white font-label-bold text-[10px] px-2 py-1 uppercase tracking-widest mb-2 inline-block">
+                      Zone B
+                    </span>
+                    <h3 className="font-headline-lg text-xl md:text-2xl uppercase text-white font-bold">
+                      Endurance
+                    </h3>
+                  </div>
+                </div>
+
+                {/* Bottom Right 1 */}
+                <div className="md:col-span-1 md:row-span-1 relative group overflow-hidden bg-[#1A1A1A] min-h-[200px]">
+                  <img
+                    alt="Heavy bumper plates and Olympic barbell resting on textured floor"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-60"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZ48asDleho4cFqlf4-2MmPtRR_V9FpCaj4HZoDU8ZRbzJZAuU0cnc04ruvDNctLKOx7Z4oRlVAXt0SVYe4qA4Zt4BwhWhBaLxeGWsDxKasNdsw5OEUMlR0cPCqtyOIIgrv6vv3_DwgxzMQXd_a4tUfCu4YZcOC-xrHyqlMkfK3OdtRK7hcx4R-OwzKl6LPgLuLSRt3s8JZJxmMuGo1oTNpSMZk-y4NYLJxjjAnp9RIFin0p9Uqv4lDIaHl0ZfRUabuHTyw_aysUo"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] to-transparent opacity-80" />
+                  <div className="absolute bottom-4 left-4">
+                    <h4 className="font-label-bold text-sm uppercase text-white font-bold">
+                      Free Weights
+                    </h4>
+                  </div>
+                </div>
+
+                {/* Bottom Right 2 */}
+                <div className="md:col-span-1 md:row-span-1 relative group overflow-hidden bg-[#1A1A1A] flex items-center justify-center border border-[#262626] hover:border-primary-fixed transition-all duration-500 cursor-pointer min-h-[200px]">
+                  <div className="text-center">
+                    <span className="material-symbols-outlined text-primary-fixed text-4xl mb-2 block group-hover:-translate-y-1 transition-transform">
+                      imagesmode
+                    </span>
+                    <span className="font-label-bold text-xs uppercase tracking-widest text-on-surface-variant group-hover:text-white transition-colors">
+                      View All
+                      <br />
+                      Photos
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Team Section */}
+          <section
+            className="w-full py-section-gap px-margin-mobile md:px-margin-desktop bg-background reveal-scroll"
+            id="coaching"
+          >
+            <div className="max-w-container-max mx-auto">
+              <div className="text-center mb-16">
+                <h2 className="font-display-lg text-3xl md:text-5xl italic uppercase text-white font-black">
+                  ELITE <span className="text-primary-fixed">COACHING</span>
+                </h2>
+                <p className="font-body-lg text-base md:text-lg text-on-surface-variant mt-4 max-w-2xl mx-auto">
+                  Learn from professionals who have walked the path.
+                </p>
+              </div>
+
+              {/* Grid Coaches */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:px-24 reveal-cards-container">
+                {/* Coach 1 */}
+                <div className="flex flex-col items-center group reveal-card">
+                  <div className="w-64 h-64 md:w-80 md:h-80 relative overflow-hidden rounded-full border-4 border-[#262626] group-hover:border-primary-fixed transition-colors duration-500 mb-8">
+                    <img
+                      alt="Marcus Vance, Head of Strength coach at Iron Core Gym"
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
+                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuACaMafLlu3kIxtKIh6uuin8J8jfH-_4TErf3WwoFGaNIwuJlsUaKgdi8ad0t1tAz9PfdJw9sJuJnLiexOscAoFym2T1Iio27WTLgl4jxhz6v1mUrc_WfcA4rmgxmX7w0YP0WKiVP6KeOsKhBnkapOG56PKnRSrMYZDDXlBE4-qWYeB9-0080AM3E3Gw1E-P88egwFcNec_OSPx-pshOcPT0R0u5aq6bxtWieHEW_XtGLCkA9_Fjrb3rciYW_z3uk3WYg5I7CHWzVA"
+                    />
+                    <div className="absolute inset-0 bg-primary-fixed/20 mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  </div>
+                  <h3 className="font-headline-lg text-2xl uppercase text-white font-bold mb-2">
+                    Marcus Vance
+                  </h3>
+                  <span className="font-label-bold text-sm uppercase tracking-widest text-primary-fixed mb-4 font-bold">
+                    Head of Strength
+                  </span>
+                  <p className="font-body-md text-sm md:text-base text-on-surface-variant text-center max-w-sm leading-relaxed">
+                    Former competitive powerlifter. Specializes in raw strength acquisition and
+                    biomechanical optimization.
+                  </p>
+                </div>
+
+                {/* Coach 2 */}
+                <div className="flex flex-col items-center group reveal-card">
+                  <div className="w-64 h-64 md:w-80 md:h-80 relative overflow-hidden rounded-full border-4 border-[#262626] group-hover:border-primary-fixed transition-colors duration-500 mb-8">
+                    <img
+                      alt="Elena Rostova, Director of Conditioning coach at Iron Core Gym"
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
+                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZGCjx-hwflcoBaD4fPZbVF2F3yp-PA45KRU8aDgfpnhsZNk5Y7-1MjQBjHRbKsq1o-9k5bGR2VdtalghgzixYYr39mM96ielSPSFqvtEMoFiuepFNmuNkxFw5N-L4BpQnES6-niUWVKSisdQp6wjQwz2j9Qw7bzdWKFreGjGXX1jUJqeikDtkc35eyvjSc37O5hecNuZqmqNHwGjfAc7FIHG9L_sbVgu635M5PaU9U6m-RnIsSzZPwiOoondGx_GFxG-Khi2aamU"
+                    />
+                    <div className="absolute inset-0 bg-primary-fixed/20 mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  </div>
+                  <h3 className="font-headline-lg text-2xl uppercase text-white font-bold mb-2">
+                    Elena Rostova
+                  </h3>
+                  <span className="font-label-bold text-sm uppercase tracking-widest text-primary-fixed mb-4 font-bold">
+                    Director of Conditioning
+                  </span>
+                  <p className="font-body-md text-sm md:text-base text-on-surface-variant text-center max-w-sm leading-relaxed">
+                    Cross-disciplinary athlete focusing on metabolic conditioning, endurance, and
+                    high-intensity interval frameworks.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Testimonial Section */}
+          <section
+            className="w-full py-section-gap px-margin-mobile md:px-margin-desktop bg-surface-container-lowest reveal-scroll"
+            id="testimonials"
+          >
+            <div className="max-w-container-max mx-auto">
+              <div className="text-center mb-16">
+                <h2 className="font-display-lg text-3xl md:text-5xl italic uppercase text-white font-black">
+                  THE <span className="text-primary-fixed">VERDICT</span>
+                </h2>
+                <p className="font-body-lg text-base md:text-lg text-on-surface-variant mt-4 max-w-2xl mx-auto">
+                  Real results from the athletes who call Iron Core home.
+                </p>
+              </div>
+
+              {/* Grid Testimonials */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter reveal-cards-container">
+                {/* Review 1 */}
+                <div className="bg-[#1A1A1A] p-8 border border-[#262626] flex flex-col gap-6 reveal-card hover:border-primary-fixed transition-colors duration-300">
+                  <div className="flex gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <span
+                        key={i}
+                        className="material-symbols-outlined text-primary-fixed"
+                        style={{ fontVariationSettings: "'FILL' 1" }}
+                      >
+                        star
+                      </span>
+                    ))}
+                  </div>
+                  <p className="font-body-lg italic text-white text-base md:text-lg leading-relaxed">
+                    &quot;Iron Core transformed my training. The facility is world-class and the coaching
+                    is unparalleled. I&apos;ve hit PRs I never thought possible.&quot;
+                  </p>
+                  <div>
+                    <h4 className="font-headline-lg text-base md:text-lg uppercase text-white font-bold">
+                      David Chen
+                    </h4>
+                    <p className="font-label-bold text-xs uppercase tracking-widest text-primary-fixed font-bold">
+                      Competitive Powerlifter
+                    </p>
+                  </div>
+                </div>
+
+                {/* Review 2 */}
+                <div className="bg-[#1A1A1A] p-8 border border-[#262626] flex flex-col gap-6 reveal-card hover:border-primary-fixed transition-colors duration-300">
+                  <div className="flex gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <span
+                        key={i}
+                        className="material-symbols-outlined text-primary-fixed"
+                        style={{ fontVariationSettings: "'FILL' 1" }}
+                      >
+                        star
+                      </span>
+                    ))}
+                  </div>
+                  <p className="font-body-lg italic text-white text-base md:text-lg leading-relaxed">
+                    &quot;The atmosphere here is electric. It&apos;s not just a gym; it&apos;s a high-performance
+                    lab where everyone is pushing for excellence.&quot;
+                  </p>
+                  <div>
+                    <h4 className="font-headline-lg text-base md:text-lg uppercase text-white font-bold">
+                      Sarah Jenkins
+                    </h4>
+                    <p className="font-label-bold text-xs uppercase tracking-widest text-primary-fixed font-bold">
+                      Hybrid Athlete
+                    </p>
+                  </div>
+                </div>
+
+                {/* Review 3 */}
+                <div className="bg-[#1A1A1A] p-8 border border-[#262626] flex flex-col gap-6 reveal-card hover:border-primary-fixed transition-colors duration-300">
+                  <div className="flex gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <span
+                        key={i}
+                        className="material-symbols-outlined text-primary-fixed"
+                        style={{ fontVariationSettings: "'FILL' 1" }}
+                      >
+                        star
+                      </span>
+                    ))}
+                  </div>
+                  <p className="font-body-lg italic text-white text-base md:text-lg leading-relaxed">
+                    &quot;The recovery protocols alone are worth the membership. The cold plunge and sauna
+                    have cut my recovery time in half.&quot;
+                  </p>
+                  <div>
+                    <h4 className="font-headline-lg text-base md:text-lg uppercase text-white font-bold">
+                      Marcus Thorne
+                    </h4>
+                    <p className="font-label-bold text-xs uppercase tracking-widest text-primary-fixed font-bold">
+                      Professional MMA Fighter
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Pricing Section */}
+          <section
+            className="w-full py-section-gap px-margin-mobile md:px-margin-desktop bg-[#0A0A0A] reveal-scroll"
+            id="pricing"
+          >
+            <div className="max-w-container-max mx-auto">
+              <div className="text-center mb-16">
+                <h2 className="font-display-lg text-3xl md:text-5xl italic uppercase text-white font-black">
+                  NO CONTRACTS. <span className="text-primary-fixed">JUST COMMITMENT.</span>
+                </h2>
+              </div>
+
+              {/* Plans Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch reveal-cards-container">
+                {/* Basic */}
+                <div className="bg-[#1A1A1A] p-8 border border-[#262626] flex flex-col relative reveal-card">
+                  <h3 className="font-headline-lg text-xl uppercase text-white font-bold mb-2">
+                    BASIC
+                  </h3>
+                  <div className="flex items-baseline gap-2 mb-6 border-b border-[#262626] pb-6">
+                    <span className="font-display-lg text-4xl md:text-5xl text-white font-black">
+                      $89
+                    </span>
+                    <span className="font-body-md text-xs uppercase text-on-surface-variant">
+                      /mo
+                    </span>
+                  </div>
+                  <ul className="flex flex-col gap-4 mb-8 flex-grow">
+                    <li className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-primary-fixed text-sm">
+                        check
+                      </span>
+                      <span className="font-body-md text-sm text-on-surface-variant">
+                        Full Facility Access 24/7
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-primary-fixed text-sm">
+                        check
+                      </span>
+                      <span className="font-body-md text-sm text-on-surface-variant">
+                        Standard Equipment Use
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-[#474746] text-sm font-bold">
+                        close
+                      </span>
+                      <span className="font-body-md text-sm text-[#474746] line-through">
+                        Group Classes
+                      </span>
+                    </li>
+                  </ul>
+                  <button className="w-full border-2 border-white text-white font-label-bold text-xs uppercase tracking-widest py-4 hover:bg-white hover:text-black transition-all duration-300 font-bold">
+                    Select Plan
+                  </button>
+                </div>
+
+                {/* Pro */}
+                <div className="bg-[#1A1A1A] p-8 border-t-4 border-t-primary-fixed border-l border-r border-b border-[#262626] flex flex-col relative transform md:-translate-y-4 shadow-2xl reveal-card">
+                  <div className="absolute top-0 right-8 -translate-y-1/2 bg-primary-fixed text-black font-label-bold text-[10px] uppercase px-3 py-1 tracking-widest font-bold">
+                    Most Popular
+                  </div>
+                  <h3 className="font-headline-lg text-xl uppercase text-primary-fixed font-bold mb-2">
+                    PRO
+                  </h3>
+                  <div className="flex items-baseline gap-2 mb-6 border-b border-[#262626] pb-6">
+                    <span className="font-display-lg text-4xl md:text-5xl text-white font-black">
+                      $149
+                    </span>
+                    <span className="font-body-md text-xs uppercase text-on-surface-variant">
+                      /mo
+                    </span>
+                  </div>
+                  <ul className="flex flex-col gap-4 mb-8 flex-grow">
+                    <li className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-primary-fixed text-sm">
+                        check
+                      </span>
+                      <span className="font-body-md text-sm text-on-surface-variant">
+                        Full Facility Access 24/7
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-primary-fixed text-sm">
+                        check
+                      </span>
+                      <span className="font-body-md text-sm text-on-surface-variant">
+                        All Group Conditioning Classes
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-primary-fixed text-sm">
+                        check
+                      </span>
+                      <span className="font-body-md text-sm text-on-surface-variant">
+                        Recovery Zone Access (Sauna/Cold Plunge)
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-primary-fixed text-sm">
+                        check
+                      </span>
+                      <span className="font-body-md text-sm text-on-surface-variant">
+                        Monthly Body Composition Scan
+                      </span>
+                    </li>
+                  </ul>
+                  <button className="w-full bg-primary-fixed text-black font-label-bold text-xs uppercase tracking-widest py-4 hover:bg-white transition-all duration-300 font-bold">
+                    Select Plan
+                  </button>
+                </div>
+
+                {/* Elite */}
+                <div className="bg-[#1A1A1A] p-8 border border-[#262626] flex flex-col relative reveal-card">
+                  <h3 className="font-headline-lg text-xl uppercase text-white font-bold mb-2">
+                    ELITE
+                  </h3>
+                  <div className="flex items-baseline gap-2 mb-6 border-b border-[#262626] pb-6">
+                    <span className="font-display-lg text-4xl md:text-5xl text-white font-black">
+                      $299
+                    </span>
+                    <span className="font-body-md text-xs uppercase text-on-surface-variant">
+                      /mo
+                    </span>
+                  </div>
+                  <ul className="flex flex-col gap-4 mb-8 flex-grow">
+                    <li className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-primary-fixed text-sm">
+                        check
+                      </span>
+                      <span className="font-body-md text-sm text-on-surface-variant">
+                        Everything in PRO
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-primary-fixed text-sm">
+                        check
+                      </span>
+                      <span className="font-body-md text-sm text-on-surface-variant">
+                        2x Weekly 1-on-1 Personal Training
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-primary-fixed text-sm">
+                        check
+                      </span>
+                      <span className="font-body-md text-sm text-on-surface-variant">
+                        Custom Nutrition Programming
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-primary-fixed text-sm">
+                        check
+                      </span>
+                      <span className="font-body-md text-sm text-on-surface-variant">
+                        Priority Class Booking
+                      </span>
+                    </li>
+                  </ul>
+                  <button className="w-full border-2 border-white text-white font-label-bold text-xs uppercase tracking-widest py-4 hover:bg-white hover:text-black transition-all duration-300 font-bold">
+                    Select Plan
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Timetable / Program Section */}
+          <section
+            id="the-program"
+            className="w-full py-section-gap px-margin-mobile md:px-margin-desktop bg-background reveal-scroll"
+          >
+            <div className="max-w-container-max mx-auto">
+              <div className="mb-16 border-l-4 border-primary-fixed pl-6">
+                <h2 className="font-display-lg text-3xl md:text-5xl italic uppercase text-white font-black">
+                  THE <span className="text-primary-fixed">PROGRAM</span>
+                </h2>
+                <p className="font-body-lg text-base md:text-lg text-on-surface-variant mt-4 max-w-2xl">
+                  Our weekly high-performance training schedule.
+                </p>
+              </div>
+
+              {/* Scrollable Table */}
+              <div className="overflow-x-auto border border-[#262626]">
+                <table className="w-full border-collapse text-left min-w-[700px]">
+                  <thead className="border-b border-surface-container-highest bg-[#1A1A1A]">
+                    <tr className="font-label-bold text-xs uppercase tracking-widest text-primary-fixed font-bold">
+                      <th className="py-4 px-6">Time</th>
+                      <th className="py-4 px-6">Mon</th>
+                      <th className="py-4 px-6">Tue</th>
+                      <th className="py-4 px-6">Wed</th>
+                      <th className="py-4 px-6">Thu</th>
+                      <th className="py-4 px-6">Fri</th>
+                      <th className="py-4 px-6">Sat</th>
+                      <th className="py-4 px-6">Sun</th>
+                    </tr>
+                  </thead>
+                  <tbody className="font-body-md text-sm text-on-surface-variant">
+                    <tr className="border-b border-[#262626] hover:bg-[#1A1A1A]/30 transition-colors">
+                      <td className="py-6 px-6 font-label-bold text-white font-bold">06:00 AM</td>
+                      <td className="py-6 px-6">
+                        <div className="bg-primary-fixed/10 border-l-2 border-primary-fixed p-3 text-xs text-primary-fixed font-bold">
+                          Power Lifting
+                        </div>
+                      </td>
+                      <td className="py-6 px-6 text-[#474746]">-</td>
+                      <td className="py-6 px-6">
+                        <div className="bg-primary-fixed/10 border-l-2 border-primary-fixed p-3 text-xs text-primary-fixed font-bold">
+                          Power Lifting
+                        </div>
+                      </td>
+                      <td className="py-6 px-6 text-[#474746]">-</td>
+                      <td className="py-6 px-6">
+                        <div className="bg-primary-fixed/10 border-l-2 border-primary-fixed p-3 text-xs text-primary-fixed font-bold">
+                          Power Lifting
+                        </div>
+                      </td>
+                      <td className="py-6 px-6">
+                        <div className="bg-primary-fixed/10 border-l-2 border-primary-fixed p-3 text-xs text-primary-fixed font-bold">
+                          Conditioning
+                        </div>
+                      </td>
+                      <td className="py-6 px-6 text-[#474746]">-</td>
+                    </tr>
+                    <tr className="border-b border-[#262626] hover:bg-[#1A1A1A]/30 transition-colors">
+                      <td className="py-6 px-6 font-label-bold text-white font-bold">10:00 AM</td>
+                      <td className="py-6 px-6 text-[#474746]">-</td>
+                      <td className="py-6 px-6">
+                        <div className="bg-primary-fixed/10 border-l-2 border-primary-fixed p-3 text-xs text-primary-fixed font-bold">
+                          Conditioning
+                        </div>
+                      </td>
+                      <td className="py-6 px-6 text-[#474746]">-</td>
+                      <td className="py-6 px-6">
+                        <div className="bg-primary-fixed/10 border-l-2 border-primary-fixed p-3 text-xs text-primary-fixed font-bold">
+                          Conditioning
+                        </div>
+                      </td>
+                      <td className="py-6 px-6 text-[#474746]">-</td>
+                      <td className="py-6 px-6">
+                        <div className="bg-primary-fixed/10 border-l-2 border-primary-fixed p-3 text-xs text-primary-fixed font-bold">
+                          Mobility
+                        </div>
+                      </td>
+                      <td className="py-6 px-6">
+                        <div className="bg-primary-fixed/10 border-l-2 border-primary-fixed p-3 text-xs text-primary-fixed font-bold">
+                          Mobility
+                        </div>
+                      </td>
+                    </tr>
+                    <tr className="border-b border-[#262626] hover:bg-[#1A1A1A]/30 transition-colors">
+                      <td className="py-6 px-6 font-label-bold text-white font-bold">05:00 PM</td>
+                      <td className="py-6 px-6">
+                        <div className="bg-primary-fixed/10 border-l-2 border-primary-fixed p-3 text-xs text-primary-fixed font-bold">
+                          Conditioning
+                        </div>
+                      </td>
+                      <td className="py-6 px-6">
+                        <div className="bg-primary-fixed/10 border-l-2 border-primary-fixed p-3 text-xs text-primary-fixed font-bold">
+                          Power Lifting
+                        </div>
+                      </td>
+                      <td className="py-6 px-6">
+                        <div className="bg-primary-fixed/10 border-l-2 border-primary-fixed p-3 text-xs text-primary-fixed font-bold">
+                          Conditioning
+                        </div>
+                      </td>
+                      <td className="py-6 px-6">
+                        <div className="bg-primary-fixed/10 border-l-2 border-primary-fixed p-3 text-xs text-primary-fixed font-bold">
+                          Power Lifting
+                        </div>
+                      </td>
+                      <td className="py-6 px-6">
+                        <div className="bg-primary-fixed/10 border-l-2 border-primary-fixed p-3 text-xs text-primary-fixed font-bold">
+                          Conditioning
+                        </div>
+                      </td>
+                      <td className="py-6 px-6 text-[#474746]">-</td>
+                      <td className="py-6 px-6 text-[#474746]">-</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          {/* FAQ Accordions Section */}
+          <section
+            id="faq"
+            className="w-full py-section-gap px-margin-mobile md:px-margin-desktop bg-[#0A0A0A] reveal-scroll"
+          >
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-16">
+                <h2 className="font-display-lg text-3xl md:text-5xl italic uppercase text-white font-black">
+                  COMMON <span className="text-primary-fixed">QUESTIONS</span>
+                </h2>
+              </div>
+
+              {/* Accordions */}
+              <div className="flex flex-col gap-4">
+                {[
+                  {
+                    q: "Do I need prior experience?",
+                    a: "No. We welcome all levels. Our coaches specialize in scaling movements to your current ability while ensuring you progress safely.",
+                  },
+                  {
+                    q: "What is the guest policy?",
+                    a: "Members can bring one guest per month for free. Additional guest passes are available for purchase at the front desk.",
+                  },
+                  {
+                    q: "Are there showers and lockers?",
+                    a: "Yes. We provide full-service locker rooms with private showers, towel service, and premium grooming products.",
+                  },
+                  {
+                    q: "How do I cancel my membership?",
+                    a: "We require a 30-day notice for cancellations. You can process this through our member portal or in person at the facility.",
+                  },
+                ].map((faq, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-[#1A1A1A] border border-[#262626] p-6 group cursor-pointer hover:border-primary-fixed transition-colors duration-300"
+                  >
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-headline-lg text-base md:text-lg uppercase text-white font-bold">
+                        {faq.q}
+                      </h4>
+                      <span className="material-symbols-outlined text-primary-fixed group-hover:rotate-90 transition-transform duration-300">
+                        add
+                      </span>
+                    </div>
+                    <p className="font-body-md text-sm md:text-base text-on-surface-variant mt-4 hidden group-hover:block transition-all duration-500 leading-relaxed">
+                      {faq.a}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Contact Section */}
+          <section
+            id="contact"
+            className="w-full py-section-gap px-margin-mobile md:px-margin-desktop bg-[#0A0A0A] reveal-scroll"
+          >
+            <div className="max-w-container-max mx-auto">
+              <div className="mb-16 border-l-4 border-primary-fixed pl-6">
+                <h2 className="font-display-lg text-3xl md:text-5xl italic uppercase text-white font-black">
+                  THE <span className="text-primary-fixed">CONNECTION</span>
+                </h2>
+                <p className="font-body-lg text-base md:text-lg text-on-surface-variant mt-4 max-w-2xl">
+                  Direct access to the elite performance team.
+                </p>
+              </div>
+
+              {/* Grid Connection */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+                {/* Contact Form */}
+                <div className="bg-[#1A1A1A] p-8 border border-[#262626]">
+                  {contactSuccess ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center gap-4">
+                      <span className="material-symbols-outlined text-primary-fixed text-6xl animate-bounce">
+                        check_circle
+                      </span>
+                      <h3 className="font-headline-lg text-2xl uppercase text-white font-bold">
+                        CONNECTION ESTABLISHED
+                      </h3>
+                      <p className="font-body-md text-on-surface-variant max-w-xs">
+                        Our elite team has received your coordinates and will reach out shortly. Stay
+                        volted.
+                      </p>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleContactSubmit} className="flex flex-col gap-6">
+                      <div className="flex flex-col gap-2">
+                        <label className="font-label-bold text-[10px] md:text-xs uppercase tracking-widest text-primary-fixed font-bold">
+                          Name
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="YOUR FULL NAME"
+                          className="bg-background border border-[#262626] focus:border-primary-fixed text-white font-body-md px-4 py-3 outline-none transition-colors text-sm"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="font-label-bold text-[10px] md:text-xs uppercase tracking-widest text-primary-fixed font-bold">
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="EMAIL@ADDRESS.COM"
+                          className="bg-background border border-[#262626] focus:border-primary-fixed text-white font-body-md px-4 py-3 outline-none transition-colors text-sm"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="font-label-bold text-[10px] md:text-xs uppercase tracking-widest text-primary-fixed font-bold">
+                          Message
+                        </label>
+                        <textarea
+                          rows={4}
+                          required
+                          value={message}
+                          onChange={(e) => setMessage(e.target.value)}
+                          placeholder="HOW CAN WE HELP YOU?"
+                          className="bg-background border border-[#262626] focus:border-primary-fixed text-white font-body-md px-4 py-3 outline-none transition-colors resize-none text-sm"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={contactLoading}
+                        className="bg-primary-fixed text-black font-label-bold text-xs uppercase tracking-widest py-4 hover:bg-white transition-all duration-300 active:scale-95 font-bold disabled:opacity-50"
+                      >
+                        {contactLoading ? "ESTABLISHING..." : "SEND MESSAGE"}
+                      </button>
+                    </form>
+                  )}
+                </div>
+
+                {/* Details & Map */}
+                <div className="flex flex-col gap-12 justify-between">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                    <div className="flex flex-col gap-4">
+                      <h4 className="font-label-bold text-xs uppercase tracking-widest text-white font-bold">
+                        Location
+                      </h4>
+                      <div className="flex items-start gap-3 text-on-surface-variant font-body-md text-sm md:text-base leading-relaxed">
+                        <span className="material-symbols-outlined text-primary-fixed text-xl">
+                          location_on
+                        </span>
+                        <span>
+                          123 Performance Way,
+                          <br />
+                          Industrial District, NY 10001
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-4">
+                      <h4 className="font-label-bold text-xs uppercase tracking-widest text-white font-bold">
+                        Direct
+                      </h4>
+                      <div className="flex flex-col gap-3 text-on-surface-variant font-body-md text-sm md:text-base">
+                        <div className="flex items-center gap-3">
+                          <span className="material-symbols-outlined text-primary-fixed text-xl">
+                            call
+                          </span>
+                          <span>(555) 987-CORE</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="material-symbols-outlined text-primary-fixed text-xl">
+                            mail
+                          </span>
+                          <a
+                            href="mailto:elite@ironcore.com"
+                            className="hover:text-primary-fixed transition-colors"
+                          >
+                            elite@ironcore.com
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pinging Map Placeholder */}
+                  <div className="relative w-full h-64 bg-[#1A1A1A] border border-[#262626] overflow-hidden group">
+                    <div className="absolute inset-0 opacity-20 grayscale group-hover:grayscale-0 transition-all duration-700">
+                      <div className="w-full h-full bg-[radial-gradient(#262626_1px,transparent_1px)] [background-size:20px_20px]" />
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="relative">
+                        <div className="absolute -inset-4 bg-primary-fixed/20 rounded-full animate-ping" />
+                        <span className="material-symbols-outlined text-primary-fixed text-4xl relative z-10">
+                          location_on
+                        </span>
+                      </div>
+                    </div>
+                    <div className="absolute bottom-4 left-4 bg-background/80 backdrop-blur-md px-3 py-1 border border-[#262626]">
+                      <span className="font-label-bold text-[10px] uppercase tracking-widest text-white font-bold">
+                        Industrial District HQ
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Footer Component */}
+          <footer className="relative w-full py-section-gap bg-surface-container-lowest overflow-hidden border-t border-surface-container-highest reveal-scroll">
+            {/* Background Brand Element */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 opacity-5 select-none">
+              <span className="font-display-xl text-[20vw] leading-none italic uppercase text-white font-black whitespace-nowrap">
+                IRON CORE
+              </span>
+            </div>
+
+            <div className="relative z-10 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+                {/* Column 1: Brand Mission */}
+                <div className="flex flex-col gap-6">
+                  <div className="font-display-lg text-2xl md:text-3xl italic text-primary-fixed uppercase font-black">
+                    IRON CORE
+                  </div>
+                  <p className="font-body-md text-sm text-on-surface-variant max-w-xs leading-relaxed">
+                    Forging elite athletes through science and grit. Join the ranks of the
+                    uncompromising.
+                  </p>
+                  <div className="flex gap-4">
+                    <a
+                      href="#"
+                      className="w-10 h-10 rounded-full border border-surface-container-highest flex items-center justify-center text-on-surface hover:bg-primary-fixed hover:text-black transition-all duration-300"
+                    >
+                      <span className="material-symbols-outlined text-lg">share</span>
+                    </a>
+                    <a
+                      href="#"
+                      className="w-10 h-10 rounded-full border border-surface-container-highest flex items-center justify-center text-on-surface hover:bg-primary-fixed hover:text-black transition-all duration-300"
+                    >
+                      <span className="material-symbols-outlined text-lg">play_circle</span>
+                    </a>
+                    <a
+                      href="#"
+                      className="w-10 h-10 rounded-full border border-surface-container-highest flex items-center justify-center text-on-surface hover:bg-primary-fixed hover:text-black transition-all duration-300"
+                    >
+                      <span className="material-symbols-outlined text-lg">public</span>
+                    </a>
+                  </div>
+                </div>
+
+                {/* Column 2: Quick Links */}
+                <div className="flex flex-col gap-6">
+                  <h4 className="font-label-bold text-xs uppercase tracking-widest text-white font-bold">
+                    Explore
+                  </h4>
+                  <nav className="flex flex-col gap-3">
+                    <a
+                      href="#the-method"
+                      className="font-body-md text-sm text-on-surface-variant hover:text-primary-fixed transition-colors"
+                    >
+                      Training Method
+                    </a>
+                    <a
+                      href="#the-lab"
+                      className="font-body-md text-sm text-on-surface-variant hover:text-primary-fixed transition-colors"
+                    >
+                      The Lab
+                    </a>
+                    <a
+                      href="#pricing"
+                      className="font-body-md text-sm text-on-surface-variant hover:text-primary-fixed transition-colors"
+                    >
+                      Pricing Plans
+                    </a>
+                    <a
+                      href="#coaching"
+                      className="font-body-md text-sm text-on-surface-variant hover:text-primary-fixed transition-colors"
+                    >
+                      Elite Coaching
+                    </a>
+                  </nav>
+                </div>
+
+                {/* Column 3: Contact Info */}
+                <div className="flex flex-col gap-6">
+                  <h4 className="font-label-bold text-xs uppercase tracking-widest text-white font-bold">
+                    Contact
+                  </h4>
+                  <div className="flex flex-col gap-4 font-body-md text-sm text-on-surface-variant leading-relaxed">
+                    <div className="flex items-start gap-3">
+                      <span className="material-symbols-outlined text-primary-fixed text-lg">
+                        location_on
+                      </span>
+                      <span>
+                        123 Performance Way,
+                        <br />
+                        Industrial District, NY 10001
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-primary-fixed text-lg">
+                        mail
+                      </span>
+                      <a
+                        href="mailto:elite@ironcore.com"
+                        className="hover:text-primary-fixed transition-colors"
+                      >
+                        elite@ironcore.com
+                      </a>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-primary-fixed text-lg">
+                        call
+                      </span>
+                      <span>(555) 987-CORE</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Column 4: Newsletter */}
+                <div className="flex flex-col gap-6">
+                  <h4 className="font-label-bold text-xs uppercase tracking-widest text-white font-bold">
+                    STAY VOLTED
+                  </h4>
+                  <p className="font-body-md text-sm text-on-surface-variant">
+                    Get training insights and facility updates.
+                  </p>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      alert("Subscribed to STAY VOLTED newsletter.");
+                    }}
+                    className="flex flex-col gap-2"
+                  >
+                    <input
+                      type="email"
+                      required
+                      placeholder="EMAIL ADDRESS"
+                      className="bg-surface-container-high border-none text-white font-label-bold text-xs px-4 py-3 focus:ring-2 focus:ring-primary-fixed outline-none text-center"
+                    />
+                    <button
+                      type="submit"
+                      className="bg-primary-fixed text-black font-label-bold text-xs uppercase tracking-widest py-3 hover:bg-white transition-all duration-300 font-bold"
+                    >
+                      SUBSCRIBE
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              {/* Bottom Bar */}
+              <div className="pt-8 border-t border-surface-container-highest flex flex-col md:flex-row justify-between items-center gap-6">
+                <div className="font-body-md text-[10px] md:text-xs text-on-surface-variant uppercase tracking-widest">
+                  © 2024 IRON CORE PERFORMANCE. ALL RIGHTS RESERVED.
+                </div>
+                <div className="flex gap-8 font-label-bold text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">
+                  <a href="#" className="hover:text-primary-fixed transition-colors">
+                    Privacy Policy
+                  </a>
+                  <a href="#" className="hover:text-primary-fixed transition-colors">
+                    Terms of Service
+                  </a>
+                </div>
+              </div>
+            </div>
+          </footer>
+
+          {/* AI Coach Widget */}
+          <ChatWidget />
+        </LenisProvider>
+      )}
+    </>
+  );
+}

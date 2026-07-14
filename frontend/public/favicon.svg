@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect width="100" height="100" fill="#131313" rx="20"/>
+  <!-- Bold Stylized Shield / Diamond representing Iron Core -->
+  <polygon points="50,15 85,35 85,65 50,85 15,65 15,35" fill="none" stroke="#d2f000" stroke-width="8" stroke-linejoin="miter"/>
+  <!-- Stylized inner heavy barbell / 'I' element -->
+  <rect x="44" y="28" width="12" height="44" fill="#ffffff" rx="2"/>
+  <rect x="30" y="28" width="40" height="8" fill="#d2f000" rx="1"/>
+  <rect x="30" y="64" width="40" height="8" fill="#d2f000" rx="1"/>
+</svg>

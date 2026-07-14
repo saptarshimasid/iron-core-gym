@@ -1,0 +1,15 @@
+{
+  "name": "iron-core-gym",
+  "version": "1.0.0",
+  "description": "Iron Core Gym Hub - Next.js, Express, and Python LangGraph Agent",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix frontend && npm install --prefix backend && python3 -m venv agent/.venv && agent/.venv/bin/pip install -r agent/requirements.txt",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:agent": "source agent/.venv/bin/activate && python3 agent/main.py",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run dev:agent\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
