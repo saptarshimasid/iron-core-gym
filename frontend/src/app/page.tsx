@@ -1330,7 +1330,7 @@ export default function Home() {
               {/* Bottom Bar */}
               <div className="pt-8 border-t border-surface-container-highest flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="font-body-md text-[10px] md:text-xs text-on-surface-variant uppercase tracking-widest">
-                  © 2024 IRON CORE PERFORMANCE. ALL RIGHTS RESERVED.
+                  © {new Date().getFullYear()} IRON CORE PERFORMANCE. ALL RIGHTS RESERVED.
                 </div>
                 <div className="flex gap-8 font-label-bold text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">
                   <a href="#" className="hover:text-primary-fixed transition-colors">
