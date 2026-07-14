@@ -92,6 +92,16 @@ body {
   background: #d2f000;
 }
 
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
+}
+
+
 /* Smooth Scrolling styling for Lenis */
 html.lenis, html.lenis body {
   height: auto;
